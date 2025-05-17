@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Formulário de Dezenas</title>
+  <title>Formulário de Dezenas com Detecção de Pop-up</title>
   <style>
     body { font-family: Arial, sans-serif; padding: 20px; background-color: #f9f9f9; }
     h2 { text-align: center; }
@@ -14,6 +14,7 @@
     .number.disabled { background-color: #ddd; cursor: not-allowed; }
     button { padding: 10px 20px; background-color: #2196f3; color: white; border: none; cursor: pointer; border-radius: 5px; display: block; margin: 20px auto 0; }
     button:disabled { background-color: #ccc; }
+    #popup-warning { display: none; text-align: center; color: red; margin-top: 20px; }
   </style>
 </head>
 <body>
@@ -35,10 +36,16 @@
   <div class="number-grid" id="grid"></div>
 
   <button id="enviar" disabled>Enviar Respostas</button>
+  <div id="popup-warning">
+    ⚠️ Não foi possível abrir o WhatsApp.<br>
+    Verifique se o <strong>bloqueador de pop-ups</strong> está ativado e permita a abertura de novas janelas.<br><br>
+    <button onclick="retryWhatsApp()">Tentar novamente</button>
+  </div>
 
   <script>
     const grid = document.getElementById('grid');
     const enviarBtn = document.getElementById('enviar');
+    let msg = "";
 
     for (let i = 1; i <= 60; i++) {
       const div = document.createElement('div');
@@ -75,30 +82,34 @@
         return;
       }
 
-      const payload = {
-        nome,
-        telefone,
-        vendedor,
-        dezenas: dezenas.join(', ')
-      };
+      const payload = { nome, telefone, vendedor, dezenas: dezenas.join(', ') };
 
       try {
         await fetch('https://script.google.com/macros/s/AKfycbxNx6f_2abgKuMDSzjgWU_gA-UI12MZe8QWvxnwhZ7ZmQjYg0ZiQ8BFiAT4f9-vU_Uewg/exec', {
           method: 'POST',
           mode: 'no-cors',
-          headers: {
-            'Content-Type': 'application/json'
-          },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
         });
       } catch (error) {
         console.error('Erro ao enviar para o Google Sheets:', error);
       }
 
-      const msg = `Nome: ${nome}\nTelefone: ${telefone}\nVendedor: ${vendedor}\nDezenas escolhidas: ${dezenas.join(', ')}`;
-      const url = `https://wa.me/?text=${encodeURIComponent(msg)}`;
-      window.open(url, '_blank');
+      msg = `Nome: ${nome}\nTelefone: ${telefone}\nVendedor: ${vendedor}\nDezenas escolhidas: ${dezenas.join(', ')}`;
+      openWhatsApp();
     };
+
+    function openWhatsApp() {
+      const win = window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
+      if (!win || win.closed || typeof win.closed == 'undefined') {
+        document.getElementById('popup-warning').style.display = 'block';
+      }
+    }
+
+    function retryWhatsApp() {
+      document.getElementById('popup-warning').style.display = 'none';
+      openWhatsApp();
+    }
   </script>
 </body>
 </html>
