@@ -1,9 +1,10 @@
+
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Escolha aqui as suas dezenas da sorte!</title>
+  <title>Escolha os seus números e Boa Sorte!!</title>
   <style>
     body { font-family: Arial, sans-serif; padding: 20px; background-color: #f9f9f9; }
     h2 { text-align: center; }
@@ -14,32 +15,43 @@
     .number.disabled { background-color: #ddd; cursor: not-allowed; }
     button { padding: 10px 20px; background-color: #2196f3; color: white; border: none; cursor: pointer; border-radius: 5px; display: block; margin: 20px auto 0; }
     button:disabled { background-color: #ccc; }
-    #popup-warning { display: none; text-align: center; color: red; margin-top: 20px; }
+    #popup-warning, #resumo, #confirmacao { display: none; text-align: center; margin-top: 20px; }
+    #resumo pre { background: #fff; border: 1px solid #ccc; padding: 10px; text-align: left; }
   </style>
 </head>
 <body>
   <h2>Formulário de Participação</h2>
-  <div class="input-field">
-    <label>Nome Completo:</label><br>
-    <input type="text" id="nome" style="width: 100%">
-  </div>
-  <div class="input-field">
-    <label>Telefone com DDD:</label><br>
-    <input type="text" id="telefone" style="width: 100%">
-  </div>
-  <div class="input-field">
-    <label>Nome do Vendedor:</label><br>
-    <input type="text" id="vendedor" style="width: 100%">
+  <div id="formulario">
+    <div class="input-field">
+      <label>Nome Completo:</label><br>
+      <input type="text" id="nome" style="width: 100%">
+    </div>
+    <div class="input-field">
+      <label>Telefone com DDD:</label><br>
+      <input type="text" id="telefone" style="width: 100%">
+    </div>
+    <div class="input-field">
+      <label>Nome do Vendedor:</label><br>
+      <input type="text" id="vendedor" style="width: 100%">
+    </div>
+
+    <p><strong>Selecione 20 dezenas:</strong></p>
+    <div class="number-grid" id="grid"></div>
+
+    <button id="enviar" disabled>Enviar Respostas</button>
   </div>
 
-  <p><strong>Selecione 20 dezenas:</strong></p>
-  <div class="number-grid" id="grid"></div>
-
-  <button id="enviar" disabled>Enviar Respostas</button>
   <div id="popup-warning">
-    ⚠️ Não foi possível abrir o WhatsApp.<br>
+   ⚠️ Não foi possível abrir o WhatsApp.<br>
     Verifique se o <strong>bloqueador de pop-ups</strong> está ativado e permita a abertura de novas janelas.<br><br>
     <button onclick="retryWhatsApp()">Tentar novamente</button>
+  </div>
+
+  <div id="confirmacao"></div>
+  <div id="resumo">
+    <pre id="dadosResumo"></pre>
+    <button onclick="salvarArquivo()">Salvar</button>
+    <button id="enviarWhatsappBtn" onclick="openWhatsApp()">Enviar</button>
   </div>
 
   <script>
@@ -96,19 +108,57 @@
       }
 
       msg = `Nome: ${nome}\nTelefone: ${telefone}\nVendedor: ${vendedor}\nDezenas escolhidas: ${dezenas.join(', ')}`;
-      openWhatsApp();
+      if (confirm('Dados recebidos com sucesso!!\n\nDeseja encaminhar os dados pelo WhatsApp?')) {
+        mostrarResumo(msg, true);
+      } else {
+        mostrarResumo(msg, false);
+      }
     };
+
+    function mostrarResumo(texto, mostrarEnviar) {
+      document.getElementById('formulario').style.display = 'none';
+      document.getElementById('popup-warning').style.display = 'none';
+      document.getElementById('resumo').style.display = 'block';
+      document.getElementById('dadosResumo').textContent = texto;
+      document.getElementById('enviarWhatsappBtn').style.display = mostrarEnviar ? 'inline-block' : 'none';
+    }
+
+    function salvarArquivo() {
+      const blob = new Blob([msg], { type: 'text/plain' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'dados_loteria.txt';
+      a.click();
+      // após salvar, mantém a tela para possível envio ao WhatsApp
+      document.getElementById('resumo').style.display = 'block';
+      document.getElementById('enviarWhatsappBtn').style.display = 'inline-block';
+    }
 
     function openWhatsApp() {
       const win = window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
       if (!win || win.closed || typeof win.closed == 'undefined') {
         document.getElementById('popup-warning').style.display = 'block';
+      } else {
+        reiniciarFormulario();
       }
     }
 
     function retryWhatsApp() {
       document.getElementById('popup-warning').style.display = 'none';
       openWhatsApp();
+    }
+
+    function reiniciarFormulario() {
+      document.getElementById('formulario').style.display = 'block';
+      document.getElementById('resumo').style.display = 'none';
+      document.getElementById('popup-warning').style.display = 'none';
+      document.getElementById('nome').value = '';
+      document.getElementById('telefone').value = '';
+      document.getElementById('vendedor').value = '';
+      document.querySelectorAll('.number').forEach(div => {
+        div.classList.remove('selected', 'disabled');
+      });
+      enviarBtn.disabled = true;
     }
   </script>
 </body>
