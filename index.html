@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -52,6 +51,7 @@
     <pre id="dadosResumo"></pre>
     <button onclick="salvarArquivo()">Salvar</button>
     <button id="enviarWhatsappBtn" onclick="openWhatsApp()">Enviar</button>
+    <button id="voltarBtn" onclick="voltarFormulario()" style="display: none;">Voltar</button>
   </div>
 
   <script>
@@ -132,8 +132,12 @@
       // após salvar, mantém a tela para possível envio ao WhatsApp
       document.getElementById('resumo').style.display = 'block';
       document.getElementById('enviarWhatsappBtn').style.display = 'inline-block';
+      document.getElementById('voltarBtn').style.display = 'inline-block';
     }
 
+    function voltarFormulario() {
+      reiniciarFormulario();
+    }
     function openWhatsApp() {
       const win = window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
       if (!win || win.closed || typeof win.closed == 'undefined') {
